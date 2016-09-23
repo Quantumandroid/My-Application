@@ -1,116 +1,207 @@
-package com.example.shindemandar82.android_example;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+ package com.example.softlogic1.userregistrationsample;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicNameValuePair;
-
-import android.app.Activity;
+import android.app.ProgressDialog;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import java.util.HashMap;
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener{
 
-    EditText editTextName, editTextEmail, editTextWebsite;
+    private EditText editTextName;
+    private EditText editTextUsername;
+    private EditText editTextPassword;
+    private EditText editTextEmail;
 
-    String GetName, GetEmail, GetWebsite;
+    private Button buttonRegister;
 
-    Button buttonSubmit ;
+    private static final String REGISTER_URL = "";
 
-    String DataParseUrl = "http://mandu.0fees.us/android/insert_data.php";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        editTextName = (EditText)findViewById(R.id.editText1);
-        editTextEmail = (EditText)findViewById(R.id.editText2);
-        editTextWebsite = (EditText)findViewById(R.id.editText3);
+        editTextName = (EditText) findViewById(R.id.editTextName);
+        editTextUsername = (EditText) findViewById(R.id.editTextUserName);
+        editTextPassword = (EditText) findViewById(R.id.editTextPassword);
+        editTextEmail = (EditText) findViewById(R.id.editTextEmail);
 
-        buttonSubmit = (Button)findViewById(R.id.button1);
+        buttonRegister = (Button) findViewById(R.id.buttonRegister);
 
-        buttonSubmit.setOnClickListener(new View.OnClickListener() {
+        buttonRegister.setOnClickListener(this);
+    }
+
+    @Override
+    public void onClick(View v) {
+        if(v == buttonRegister){
+            registerUser();
+        }
+    }
+
+    private void registerUser() {
+        String name = editTextName.getText().toString().trim().toLowerCase();
+        String username = editTextUsername.getText().toString().trim().toLowerCase();
+        String password = editTextPassword.getText().toString().trim().toLowerCase();
+        String email = editTextEmail.getText().toString().trim().toLowerCase();
+
+        register(name,username,password,email);
+    }
+
+    private void register(String name, String username, String password, String email) {
+        class RegisterUser extends AsyncTask<String, Void, String>{
+            ProgressDialog loading;
+            RegisterUserClass ruc = new RegisterUserClass();
+
 
             @Override
-            public void onClick(View v) {
-                // TODO Auto-generated method stub
-
-                GetDataFromEditText();
-
-                SendDataToServer(GetName, GetEmail, GetWebsite);
-
+            protected void onPreExecute() {
+                super.onPreExecute();
+                loading = ProgressDialog.show(MainActivity.this, "Please Wait",null, true, true);
             }
-        });
-    }
 
+            @Override
+            protected void onPostExecute(String s) {
+                super.onPostExecute(s);
+                loading.dismiss();
+                Toast.makeText(getApplicationContext(),s,Toast.LENGTH_LONG).show();
+            }
 
-    public void GetDataFromEditText(){
-
-        GetName = editTextName.getText().toString();
-        GetEmail = editTextEmail.getText().toString();
-        GetWebsite = editTextWebsite.getText().toString();
-
-    }
-
-
-    public void SendDataToServer(final String name, final String email, final String website){
-        class SendPostReqAsyncTask extends AsyncTask<String, Void, String> {
             @Override
             protected String doInBackground(String... params) {
 
-                String QuickName = name ;
-                String QuickEmail = email ;
-                String QuickWebsite = website;
+                HashMap<String, String> data = new HashMap<String,String>();
+                data.put("name",params[0]);
+                data.put("username",params[1]);
+                data.put("password",params[2]);
+                data.put("email",params[3]);
 
-                List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
+                String result = ruc.sendPostRequest(REGISTER_URL,data);
 
-                nameValuePairs.add(new BasicNameValuePair("name", QuickName));
-                nameValuePairs.add(new BasicNameValuePair("email", QuickEmail));
-                nameValuePairs.add(new BasicNameValuePair("website", QuickWebsite));
-
-                try {
-                    HttpClient httpClient = new DefaultHttpClient();
-
-                    HttpPost httpPost = new HttpPost(DataParseUrl);
-
-                    httpPost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
-
-                    HttpResponse response = httpClient.execute(httpPost);
-
-                    HttpEntity entity = response.getEntity();
-
-
-                } catch (ClientProtocolException e) {
-
-                } catch (IOException e) {
-
-                }
-                return "Data Submit Successfully";
-            }
-
-            @Override
-            protected void onPostExecute(String result) {
-                super.onPostExecute(result);
-
-                Toast.makeText(MainActivity.this, "Data Submit Successfully", Toast.LENGTH_LONG).show();
-
+                return  result;
             }
         }
-        SendPostReqAsyncTask sendPostReqAsyncTask = new SendPostReqAsyncTask();
-        sendPostReqAsyncTask.execute(name, email, website);
+
+        RegisterUser ru = new RegisterUser();
+        ru.execute(name,username,password,email);
+    }
+}
+-----------------------------------------------------------------------------------------------------
+package com.example.softlogic1.userregistrationsample;
+
+import org.apache.http.HttpException;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.net.ssl.HttpsURLConnection;
+
+/**
+ * Created by Belal on 8/6/2015.
+ */
+public class RegisterUserClass {
+
+    public String sendPostRequest(String requestURL,
+                                  HashMap<String, String> postDataParams) {
+
+        URL url;
+        String response = "";
+        try {
+            url = new URL(requestURL);
+
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setReadTimeout(15000);
+            conn.setConnectTimeout(15000);
+            conn.setRequestMethod("POST");
+            conn.setDoInput(true);
+            conn.setDoOutput(true);
+
+
+            OutputStream os = conn.getOutputStream();
+            BufferedWriter writer = new BufferedWriter(
+                    new OutputStreamWriter(os, "UTF-8"));
+            writer.write(getPostDataString(postDataParams));
+
+            writer.flush();
+            writer.close();
+            os.close();
+            int responseCode=conn.getResponseCode();
+
+            if (responseCode == HttpsURLConnection.HTTP_OK) {
+                BufferedReader br=new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                response = br.readLine();
+            }
+            else {
+                response="Error Registering";
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return response;
     }
 
+    private String getPostDataString(HashMap<String, String> params) throws UnsupportedEncodingException {
+        StringBuilder result = new StringBuilder();
+        boolean first = true;
+        for(Map.Entry<String, String> entry : params.entrySet()){
+            if (first)
+                first = false;
+            else
+                result.append("&");
+
+            result.append(URLEncoder.encode(entry.getKey(), "UTF-8"));
+            result.append("=");
+            result.append(URLEncoder.encode(entry.getValue(), "UTF-8"));
+        }
+
+        return result.toString();
+    }
+}
+---------------------------------------------------------------------------
+.php
+<?php
+if($_SERVER['REQUEST_METHOD']=='POST'){
+		$name = $_POST['name'];
+		$username = $_POST['username'];
+		$password = $_POST['password'];
+		$email = $_POST['email'];
+		
+		if($name == '' || $username == '' || $password == '' || $email == ''){
+			echo 'please fill all values';
+		}else{
+			require_once('dbConnect.php');
+			$sql = "SELECT * FROM users WHERE username='$username' OR email='$email'";
+			
+			$check = mysqli_fetch_array(mysqli_query($con,$sql));
+			
+			if(isset($check)){
+				echo 'username or email already exist';
+			}else{				
+				$sql = "INSERT INTO users (name,username,password,email) VALUES('$name','$username','$password','$email')";
+				if(mysqli_query($con,$sql)){
+					echo 'successfully registered';
+				}else{
+					echo 'oops! Please try again!';
+				}
+			}
+			mysqli_close($con);
+		}
+}else{
+echo 'error';
 }
