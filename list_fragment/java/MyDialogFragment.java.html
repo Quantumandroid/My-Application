@@ -1,0 +1,111 @@
+<html>
+<head>
+<title>MyDialogFragment.java</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.ln { color: rgb(0,0,0); font-weight: normal; font-style: normal; }
+.s0 { color: rgb(0,0,128); font-weight: bold; }
+.s1 { color: rgb(0,0,0); }
+.s2 { color: rgb(0,128,0); font-weight: bold; }
+.s3 { color: rgb(128,128,128); font-style: italic; }
+</style>
+</head>
+<BODY BGCOLOR="#ffffff">
+<TABLE CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#C0C0C0" >
+<TR><TD><CENTER>
+<FONT FACE="Arial, Helvetica" COLOR="#000000">
+MyDialogFragment.java</FONT>
+</center></TD></TR></TABLE>
+<pre>
+<span class="s0">package </span><span class="s1">com.example.shindemandar82.list_fragment; 
+ 
+</span><span class="s0">import </span><span class="s1">android.app.DialogFragment; 
+</span><span class="s0">import </span><span class="s1">android.os.Bundle; 
+</span><span class="s0">import </span><span class="s1">android.text.Editable; 
+</span><span class="s0">import </span><span class="s1">android.text.TextWatcher; 
+</span><span class="s0">import </span><span class="s1">android.view.LayoutInflater; 
+</span><span class="s0">import </span><span class="s1">android.view.View; 
+</span><span class="s0">import </span><span class="s1">android.view.ViewGroup; 
+</span><span class="s0">import </span><span class="s1">android.widget.AdapterView; 
+</span><span class="s0">import </span><span class="s1">android.widget.EditText; 
+</span><span class="s0">import </span><span class="s1">android.widget.ListView; 
+</span><span class="s0">import </span><span class="s1">android.widget.Toast; 
+ 
+</span><span class="s0">public class </span><span class="s1">MyDialogFragment </span><span class="s0">extends </span><span class="s1">DialogFragment { 
+ 
+    EditText editText; 
+    String[] mobileArray = {</span><span class="s2">&quot;Android&quot;</span><span class="s1">, </span><span class="s2">&quot;IPhone&quot;</span><span class="s1">, </span><span class="s2">&quot;WindowsMobile&quot;</span><span class="s1">, </span><span class="s2">&quot;Blackberry&quot;</span><span class="s1">, </span><span class="s2">&quot;WebOS&quot;</span><span class="s1">, </span><span class="s2">&quot;Ubuntu&quot;</span><span class="s1">, </span><span class="s2">&quot;Windows7&quot;</span><span class="s1">, </span><span class="s2">&quot;Max OS X&quot;</span><span class="s1">}; 
+    ListView listView; 
+    String selectedFromList; 
+     </span><span class="s3">//ArrayAdapter &lt;String&gt; adapter;</span><span class="s1"> 
+    </span><span class="s0">private </span><span class="s1">HighlightArrayAdapter mHighlightArrayAdapter; 
+ 
+ 
+    </span><span class="s0">static </span><span class="s1">MyDialogFragment newInstance() { 
+        </span><span class="s0">return new </span><span class="s1">MyDialogFragment(); 
+    } 
+ 
+    @Override 
+    </span><span class="s0">public </span><span class="s1">View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) { 
+        </span><span class="s0">final </span><span class="s1">View dialogView = inflater.inflate(R.layout.customlayout, container, </span><span class="s0">false</span><span class="s1">); 
+ 
+        editText = (EditText) dialogView.findViewById(R.id.dialogedittext); 
+        listView = (ListView) dialogView.findViewById(R.id.listView); 
+ 
+ 
+        </span><span class="s3">/*adapter = new ArrayAdapter&lt;String&gt;(getActivity(),R.layout.activity_listview,R.id.label, mobileArray); 
+ 
+        listView.setAdapter(adapter);*/</span><span class="s1"> 
+        mHighlightArrayAdapter = </span><span class="s0">new </span><span class="s1">HighlightArrayAdapter(getActivity(), R.layout.list_item, R.id.product_name, mobileArray); 
+        listView.setAdapter(mHighlightArrayAdapter); 
+ 
+        listView.setOnItemClickListener(</span><span class="s0">new </span><span class="s1">AdapterView.OnItemClickListener() { 
+            </span><span class="s0">public void </span><span class="s1">onItemClick(AdapterView&lt;?&gt; parent, View view, 
+                                    </span><span class="s0">int </span><span class="s1">position, </span><span class="s0">long </span><span class="s1">id) { 
+ 
+                String s = String.valueOf(position); 
+ 
+                selectedFromList = (String) (listView.getItemAtPosition(position)); 
+                Toast.makeText(getActivity(), selectedFromList, Toast.LENGTH_SHORT).show(); 
+ 
+                EditDialogListener activity = (EditDialogListener) getActivity(); 
+                activity.updateResult(selectedFromList); 
+ 
+                dismiss(); 
+            } 
+        }); 
+ 
+        doSearch(); 
+ 
+        </span><span class="s0">return </span><span class="s1">dialogView; 
+    } 
+ 
+    </span><span class="s0">private void </span><span class="s1">doSearch() { 
+ 
+        editText.addTextChangedListener(</span><span class="s0">new </span><span class="s1">TextWatcher() { 
+            @Override 
+            </span><span class="s0">public void </span><span class="s1">beforeTextChanged(CharSequence s, </span><span class="s0">int </span><span class="s1">start, </span><span class="s0">int </span><span class="s1">count, </span><span class="s0">int </span><span class="s1">after) { 
+            } 
+ 
+            @Override 
+            </span><span class="s0">public void </span><span class="s1">onTextChanged(CharSequence s, </span><span class="s0">int </span><span class="s1">start, </span><span class="s0">int </span><span class="s1">before, </span><span class="s0">int </span><span class="s1">count) { 
+ 
+                mHighlightArrayAdapter.getFilter().filter(s); 
+            } 
+ 
+            @Override 
+            </span><span class="s0">public void </span><span class="s1">afterTextChanged(Editable s) { 
+ 
+            } 
+        }); 
+    } 
+ 
+ 
+    </span><span class="s0">public interface </span><span class="s1">EditDialogListener { 
+        </span><span class="s0">void </span><span class="s1">updateResult(String inputText); 
+    } 
+ 
+ 
+}</span></pre>
+</body>
+</html>
