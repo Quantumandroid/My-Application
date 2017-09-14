@@ -1,1 +1,511 @@
 this is xml file
+//
+//
+//
+//
+//
+Utils
+-------------------------------------------------------------------------------------------------------------------------------
+
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Environment;
+import android.os.Handler;
+import android.provider.MediaStore;
+import android.support.annotation.RequiresApi;
+import android.util.Base64;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.Spinner;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.util.Calendar;
+
+public class Utils {
+
+
+    // TODO Get String From TextView
+    public static String stringOf(TextView textView) {
+
+        return textView.getText().toString();
+    }
+
+    // TODO Get String From EditText
+    public static String stringOf(EditText editText) {
+
+        return editText.getText().toString();
+    }
+
+    // TODO Get String From Button
+    public static String stringOf(Button button) {
+
+        return button.getText().toString();
+    }
+
+    // TODO Get String From Spinner
+    public static String stringOf(Spinner spinner) {
+
+        return spinner.getSelectedItem().toString();
+    }
+
+    // TODO Get String of image
+    public static String stringOf(ImageView imageView) {
+        Bitmap bitmap = ((BitmapDrawable) imageView.getDrawable()).getBitmap();
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+        byte[] imageBytes = baos.toByteArray();
+        return Base64.encodeToString(imageBytes, Base64.DEFAULT);
+
+    }
+
+    // TODO Get Bitmap From ImageView
+    public static Bitmap getBitmap(ImageView imageView) {
+
+        return ((BitmapDrawable) imageView.getDrawable()).getBitmap();
+    }
+
+    // TODO Get Bitmap from encoded image String
+    public static Bitmap getBitmap(String encodedImageString) {
+
+        byte[] decodedString = Base64.decode(encodedImageString, Base64.DEFAULT);
+        return BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+
+
+    }
+
+    //TODO Get Encoded image String From Bitmap
+    public static String getEncodedImageString(Bitmap bitmap) {
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+        byte[] imageBytes = baos.toByteArray();
+        return Base64.encodeToString(imageBytes, Base64.DEFAULT);
+    }
+
+    // TODO Get byte Array from image Bitmap
+    public static byte[] getBitmapByteArray(Bitmap bitmap) {
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+        return baos.toByteArray();
+    }
+
+
+    // TODO Get file path from URI
+    public static String getRealPathFromURI(Context ctx, Uri contentURI) {
+
+        String thePath = "no-path-found";
+        String[] filePathColumn = {MediaStore.Images.Media.DISPLAY_NAME};
+        Cursor cursor = ctx.getContentResolver().query(contentURI, filePathColumn, null, null, null);
+        if (cursor != null) {
+            cursor.moveToFirst();
+            int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+            thePath = cursor.getString(columnIndex);
+            cursor.close();
+        }
+
+        return thePath;
+    }
+
+
+    // TODO Save and open JPEG Image file
+    public static void saveAndOpenJPEGFile(Context context, Bitmap bitmap, String dir, String nameWithoutExtension) {
+
+        String root = Environment.getExternalStorageDirectory().toString();
+
+        File myDir = new File(root + "/" + dir);
+        myDir.mkdirs();
+        String fName = nameWithoutExtension + ".jpg";
+        File file = new File(myDir, fName);
+
+        try {
+            FileOutputStream out = new FileOutputStream(file);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+            out.flush();
+            out.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        openImageWithGallery(context, file);
+    }
+
+    // TODO Open Image file with Gallery
+    public static void openImageWithGallery(Context context, File file) {
+        Intent intent = new Intent();
+        intent.setAction(Intent.ACTION_VIEW);
+        intent.setDataAndType(Uri.fromFile(file), "image/*");
+        context.startActivity(intent);
+
+    }
+
+//----------------------------------------------------------------------------------------------------------------------
+
+    // TODO Press back button twice to exit from app
+    public static boolean doubleBackToExitPressedOnce = false;
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
+    public static void doubleBackExit(final Context context) {
+
+        if (doubleBackToExitPressedOnce) {
+            //super.onBackPressed();
+            ((Activity) context).finishAffinity();
+            return;
+        }
+
+        doubleBackToExitPressedOnce = true;
+        Toast.makeText(context, "Press again to exit", Toast.LENGTH_LONG).show();
+
+        new Handler().postDelayed(new Runnable() {
+
+            @Override
+            public void run() {
+                doubleBackToExitPressedOnce = false;
+            }
+        }, 3000);
+
+    }
+
+    // TODO Get current date in the format of String
+    public static String getCurrentDate() {
+        int mYear, mMonth, mDay;
+        // Get Current Date
+        final Calendar c = Calendar.getInstance();
+        mYear = c.get(Calendar.YEAR);
+        mMonth = c.get(Calendar.MONTH);
+        mDay = c.get(Calendar.DAY_OF_MONTH);
+
+        return "" + mYear + "-" + (mMonth + 1) + "-" + mDay;
+    }
+
+    // TODO Get current time in the format of String
+    public static String getCurrentTime() {
+        int hours, minutes, seconds;
+        // Get Current Date
+        final Calendar c = Calendar.getInstance();
+        hours = c.get(Calendar.HOUR_OF_DAY);
+        minutes = c.get(Calendar.MINUTE);
+        seconds = c.get(Calendar.SECOND);
+
+        return "" + hours + ":" + minutes + ":" + seconds;
+    }
+
+    // TODO Get current date and time in the format of String
+    public static String getCurrentDateTime() {
+        int mYear, mMonth, mDay, hours, minutes, seconds;
+        // Get Current Date
+        final Calendar c = Calendar.getInstance();
+        mYear = c.get(Calendar.YEAR);
+        mMonth = c.get(Calendar.MONTH);
+        mDay = c.get(Calendar.DAY_OF_MONTH);
+        hours = c.get(Calendar.HOUR_OF_DAY);
+        minutes = c.get(Calendar.MINUTE);
+        seconds = c.get(Calendar.SECOND);
+
+        // returns standard mysql datetime format      yyyy-mm-dd HH:MM:SS
+        return "" + mYear + "-" + (mMonth + 1) + "-" + mDay + " " + hours + ":" + minutes + ":" + seconds;
+
+    }
+
+    // TODO check Internet connection is available or not
+    public static boolean isNetworkAvailable(Context context) {
+        //todo  to use this you must need internet permission in manifest.xml file
+        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+
+        return (activeNetworkInfo != null) && (activeNetworkInfo.isConnected());
+
+    }
+
+    // TODO Enter or exit fullScreen
+    public static void makeFullscreen(Context context, boolean isRequiredFullscreen) {
+
+        if (isRequiredFullscreen) {
+            ((Activity) context).getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+            ((Activity) context).getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+        } else {
+
+            ((Activity) context).getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            ((Activity) context).getWindow().addFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+        }
+    }
+
+    // TODO Display welcome screen
+    public static void splashScreen(final Context context1, final Class<?> NextActivity, int TIME_IN_MILLIS) {
+
+        ((Activity) context1).getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+        ((Activity) context1).getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+        new Handler().postDelayed(new Runnable() {
+
+            @Override
+            public void run() {
+
+                context1.startActivity(new Intent(context1, NextActivity));
+                ((Activity) context1).finish();
+            }
+
+        }, TIME_IN_MILLIS);
+
+
+    }
+
+    // TODO Close Application (double method)
+    public static void exitApplication(Context ctx, Class<?> MaiN) {
+
+        Intent exitIntent = new Intent(ctx, MaiN);
+        exitIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        exitIntent.putExtra("EXIT", true);
+        ctx.startActivity(exitIntent);
+
+    }
+
+    // TODO Close Application (double method)
+    public static void exitApplication(Context context) {
+        // receive intent for exit from app
+        if (((Activity) context).getIntent().getBooleanExtra("EXIT", false)) {
+            ((Activity) context).finish();
+
+        }
+    }
+
+    // TODO Close Application (single method)
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
+    public static void exitApp(Context context) {
+
+        ((Activity) context).finishAffinity();
+    }
+
+    // TODO Share text content to other apps
+    public static void shareText(Context context, String text_to_share) {
+        String title = "Share with";
+
+        Intent sendIntent = new Intent();
+        sendIntent.setAction(Intent.ACTION_SEND);
+        sendIntent.putExtra(Intent.EXTRA_TEXT, text_to_share);
+        sendIntent.setType("text/plain");
+        context.startActivity(Intent.createChooser(sendIntent, title));
+    }
+
+
+
+    /*spinner selection
+    *
+    * C1.setSelection(adapter.getPosition(c.getString(KEY_C1)));
+    *
+    */
+
+
+    /*Random number
+    *
+    *  final int min = 20;
+    *  final int max = 80;
+    *  final int random = Random.nextInt((max - min) + 1) + min;
+    */
+
+
+
+    /*if you want hide title bar in your activity just add this two lines in Base Application Theme in style.xml
+     *
+     *  <item name="windowActionBar">false</item>
+     *  <item name="windowNoTitle">true</item>
+     *
+     */
+
+}
+//-------------------------------------------------------------------------------------------------------------------------
+mysql
+//-------------------------------------------------------------------------------------------------------------------------
+
+import android.app.ProgressDialog;
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.os.AsyncTask;
+import android.widget.Toast;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.net.ssl.HttpsURLConnection;
+
+
+public class MySql {
+    // Listener defined earlier
+    public interface OnDataLoadListener {
+
+        public void onDataLoaded(String data);
+    }
+
+    // Member variable was defined earlier
+    private OnDataLoadListener listener;
+    private Context context;
+    private String PHP_URL;
+    private HashMap<String, String> hashMap;
+
+    // Constructor where listener events are ignored
+    public MySql(Context mContext, String url, HashMap<String, String> map) {
+        // set null or default listener or accept as argument to constructor
+        this.listener = null;
+        this.context = mContext;
+        this.PHP_URL = url;
+        this.hashMap = map;
+        checkInternet();
+
+    }
+
+    // Assign the listener implementing events interface that will receive the events
+    public void setOnDataLoadListener(OnDataLoadListener listener) {
+        this.listener = listener;
+    }
+
+    private void loadDataAsync() {
+
+        class LoadDataAsync extends AsyncTask<Void, Void, String> {
+            private ProgressDialog loading;
+
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                loading = ProgressDialog.show(context, "", "Please wait...", false, false);
+            }
+
+            @Override
+            protected String doInBackground(Void... params) {
+
+                //Creating a URL
+                URL url;
+
+                //StringBuilder object to store the message retrieved from the server
+                StringBuilder sb = new StringBuilder();
+                try {
+                    //Initializing Url
+                    url = new URL(PHP_URL);
+
+                    //Creating an httmlurl connection
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+
+                    //Configuring connection properties
+                    conn.setReadTimeout(60000);
+                    conn.setConnectTimeout(60000);
+                    conn.setRequestMethod("POST");
+                    conn.setDoInput(true);
+                    conn.setDoOutput(true);
+
+                    //Creating an output stream
+                    OutputStream os = conn.getOutputStream();
+
+                    //Writing parameters to the request
+                    //We are using a method getPostDataString which is defined below
+                    BufferedWriter writer = new BufferedWriter(
+                            new OutputStreamWriter(os, "UTF-8"));
+                    writer.write(getPostDataString(hashMap));
+
+                    writer.flush();
+                    writer.close();
+                    os.close();
+                    int responseCode = conn.getResponseCode();
+
+                    if (responseCode == HttpsURLConnection.HTTP_OK) {
+
+                        BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                        sb = new StringBuilder();
+                        String response;
+                        //Reading server response
+                        while ((response = br.readLine()) != null) {
+                            sb.append(response);
+                        }
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                return sb.toString();
+
+            }
+
+            @Override
+            protected void onPostExecute(String json_string) {
+                super.onPostExecute(json_string);
+                loading.dismiss();
+
+                if (json_string.equals("")) {
+                    Toast.makeText(context, "No data found", Toast.LENGTH_LONG).show();
+                } else {
+
+                    // Now let's trigger the event
+                    if (listener != null) {
+                        listener.onDataLoaded(json_string); // <---- fire listener here
+                    }
+
+                }
+            }
+
+        }
+        LoadDataAsync loadDataAsync = new LoadDataAsync();
+        loadDataAsync.execute();
+    }
+
+    private String getPostDataString(HashMap<String, String> params) throws UnsupportedEncodingException {
+        StringBuilder result = new StringBuilder();
+        boolean first = true;
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            if (first)
+                first = false;
+            else
+                result.append("&");
+
+
+            result.append(URLEncoder.encode(entry.getKey(), "UTF-8"));
+            result.append("=");
+            result.append(URLEncoder.encode(entry.getValue(), "UTF-8"));
+        }
+
+        return result.toString();
+    }
+
+    private void checkInternet() {
+        if (isNetworkAvailable()) {
+            loadDataAsync();
+        } else {
+            Toast.makeText(context, "There is no internet available", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
+
+
+}
+      //---------------------------------------------------------------------------------------------
+      
