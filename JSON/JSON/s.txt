@@ -1,0 +1,212 @@
+<?php
+// connect to mysql database first
+define('HOST', 'localhost'); //host
+define('USER', 'root'); //username
+define('PASS', ''); //password
+define('DB', ''); //Database name
+$con = mysqli_connect(HOST, USER, PASS, DB) or die('Unable to Connect');
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST')
+	{
+		$request = $_POST['request'];
+		switch ($request)
+			{
+		case "insert":
+				$sql = $_POST['sql'];
+				mInsert($con, $sql);
+				break;
+
+		case "update":
+				$sql = $_POST['sql'];
+				mUpdate($con, $sql);
+				break;
+
+		case "delete":
+				$sql = $_POST['sql'];
+				mDelete($con, $sql);
+				break;
+
+		case "select":
+				$sql = $_POST['sql'];
+				mSelect($con, $sql);
+				break;
+
+		case "unique":
+				$select = $_POST['select'];
+				$sql = $_POST['sql'];
+				mUnique($con, $select, $sql);
+				break;
+
+		default:
+				echo "Does not match request type";
+			} // switch closed
+	} // if close
+mysqli_close($con);
+
+/* Defining a PHP Functions */
+function mInsert($con, $sql) //TODO      Insert
+
+	{
+		$status = "";
+		$msg = "";
+		$id = "-1";
+		$query = mysqli_query($con, $sql);
+		if ($query)
+			{
+				$status = "ok";
+				$id = mysqli_insert_id($con);
+				$msg = "Success";
+			}
+		else
+			{
+				$status = "cancel";
+				$msg = mysqli_error($con);
+			}
+		$output = array(
+				'status' => $status,
+				'id' => $id,
+				'msg' => $msg
+		);
+		// Displaying the array in json format
+		echo json_encode(array(
+				'output' => $output
+		));
+	}
+function mUpdate($con, $sql) //TODO      Update
+
+	{
+		$status = "";
+		$msg = "";
+		$query = mysqli_query($con, $sql);
+		if ($query)
+			{
+				$status = "ok";
+				$msg = "Success";
+			}
+		else
+			{
+				$status = "cancel";
+				$msg = mysqli_error($con);
+			}
+		$output = array(
+				'status' => $status,
+				'msg' => $msg
+		);
+		// Displaying the array in json format
+		echo json_encode(array(
+				'output' => $output
+		));
+	}
+function mDelete($con, $sql) //TODO      Delete
+
+	{
+		$status = "";
+		$msg = "";
+		$query = mysqli_query($con, $sql);
+		if ($query)
+			{
+				$status = "ok";
+				$msg = "Success";
+			}
+		else
+			{
+				$status = "cancel";
+				$msg = mysqli_error($con);
+			}
+		$output = array(
+				'status' => $status,
+				'msg' => $msg
+		);
+		// Displaying the array in json format
+		echo json_encode(array(
+				'output' => $output
+		));
+	}
+function mSelect($con, $sql) //TODO      Select
+
+	{
+		$status = "";
+		$msg = "";
+		$result = array();
+		$query = mysqli_query($con, $sql);
+		if ($query)
+			{
+				$check = mysqli_fetch_array($query);
+				if (isset($check))
+					{
+						mysqli_data_seek($query, 0); // TODO resets the cursor to the first row
+						while ($row = mysqli_fetch_assoc($query))
+							{
+								$result[] = $row;
+							}
+						$status = "ok";
+						$msg = "Success";
+					}
+				else
+					{
+						$status = "cancel";
+						$msg = "No record found";
+					}
+			}
+		else
+			{
+				$status = "cancel";
+				$msg = mysqli_error($con);
+			}
+		$output = array(
+				'status' => $status,
+				'msg' => $msg,
+				'result' => $result
+		);
+		// Displaying the array in json format
+		echo json_encode(array(
+				'output' => $output
+		));
+	}
+function mUnique($con, $select, $sql) //TODO      First Select and then execute insert or update
+
+	{
+		$status = "";
+		$msg = "";
+		$id = "";
+		$query = mysqli_query($con, $select);
+		if ($query)
+			{
+				$check = mysqli_fetch_array($query);
+				if (isset($check))
+					{
+						$status = "cancel";
+						$msg = "exist";
+					}
+				else
+					{
+						$query = mysqli_query($con, $sql);
+						if ($query)
+							{
+								$status = "ok";
+								$msg = "Success";
+								$id = mysqli_insert_id($con);
+							}
+						else
+							{
+								$status = "cancel";
+								$msg = mysqli_error($con);
+							}
+					}
+			}
+		else
+			{
+				$status = "cancel";
+				$msg = mysqli_error($con);
+			}
+		$output = array(
+				'status' => $status,
+				'msg' => $msg,
+				'id' => $id
+		);
+		// Displaying the array in json format
+		echo json_encode(array(
+				'output' => $output
+		));
+	}
+?>
